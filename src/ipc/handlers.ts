@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, dialog } from 'electron'
 import { runFullScan } from '../scanner/index'
 import { saveScan, getLatestScan, getAllScans } from '../db/scans'
 import { getScanRoots, setScanRoots, isFirstLaunch, markLaunched } from '../db/meta'
@@ -18,4 +18,8 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('devdoc:isFirstLaunch', () => isFirstLaunch())
   ipcMain.handle('devdoc:markLaunched', () => markLaunched())
   ipcMain.handle('devdoc:diffScans', (_event, a, b) => diffScans(a, b))
+  ipcMain.handle('devdoc:showFolderPicker', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled ? null : result.filePaths[0]
+  })
 }

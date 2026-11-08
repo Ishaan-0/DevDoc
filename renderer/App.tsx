@@ -7,6 +7,8 @@ import { PythonDetail } from './components/drilldown/PythonDetail'
 import { NodeDetail } from './components/drilldown/NodeDetail'
 import { StorageDetail } from './components/drilldown/StorageDetail'
 import { PathDetail } from './components/drilldown/PathDetail'
+import { HistoryPanel } from './components/HistoryPanel'
+import { Settings } from './components/Settings'
 
 type ActiveView = 'dashboard' | 'python' | 'node' | 'storage' | 'path' | 'history' | 'settings'
 
@@ -38,7 +40,11 @@ export default function App(): React.JSX.Element {
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">DevDoc</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold">DevDoc</h1>
+            <button onClick={() => setActiveView('history')} className="text-sm text-gray-400 hover:text-gray-200">History</button>
+            <button onClick={() => setActiveView('settings')} className="text-sm text-gray-400 hover:text-gray-200">Settings</button>
+          </div>
           <ScanButton isScanning={isScanning} lastScanTime={scan?.timestamp ?? null} onScan={triggerScan} />
         </div>
         {activeView === 'dashboard' && scan && (
@@ -58,12 +64,8 @@ export default function App(): React.JSX.Element {
         {activeView === 'node' && scan && <NodeDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
         {activeView === 'storage' && scan && <StorageDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
         {activeView === 'path' && scan && <PathDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
-        {(activeView === 'history' || activeView === 'settings') && (
-          <div>
-            <button onClick={() => setActiveView('dashboard')} className="mb-4 text-blue-400 hover:text-blue-300">← Back</button>
-            <p className="text-gray-400">{activeView === 'history' ? 'History' : 'Settings'} — coming in Task 9</p>
-          </div>
-        )}
+        {activeView === 'history' && <HistoryPanel onBack={() => setActiveView('dashboard')} />}
+        {activeView === 'settings' && <Settings onBack={() => setActiveView('dashboard')} />}
       </div>
     </div>
   )

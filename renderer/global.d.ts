@@ -10,6 +10,7 @@ declare global {
       isFirstLaunch(): Promise<boolean>
       markLaunched(): Promise<void>
       diffScans(a: ScanResult, b: ScanResult): Promise<ScanDiff>
+      showFolderPicker(): Promise<string | null>
     }
   }
 }

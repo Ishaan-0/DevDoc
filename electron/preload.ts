@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld('devdoc', {
   isFirstLaunch: (): Promise<boolean> => ipcRenderer.invoke('devdoc:isFirstLaunch'),
   markLaunched: (): Promise<void> => ipcRenderer.invoke('devdoc:markLaunched'),
   diffScans: (a: ScanResult, b: ScanResult): ScanDiff => ipcRenderer.invoke('devdoc:diffScans', a, b),
+  showFolderPicker: (): Promise<string | null> => ipcRenderer.invoke('devdoc:showFolderPicker'),
 })
