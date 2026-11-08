@@ -3,6 +3,10 @@ import { Dashboard } from './components/Dashboard'
 import { ScanButton } from './components/ScanButton'
 import { useScan } from './hooks/useScan'
 import type { ScanResult } from '../src/types'
+import { PythonDetail } from './components/drilldown/PythonDetail'
+import { NodeDetail } from './components/drilldown/NodeDetail'
+import { StorageDetail } from './components/drilldown/StorageDetail'
+import { PathDetail } from './components/drilldown/PathDetail'
 
 type ActiveView = 'dashboard' | 'python' | 'node' | 'storage' | 'path' | 'history' | 'settings'
 
@@ -50,10 +54,14 @@ export default function App(): React.JSX.Element {
             {isScanning ? 'Scanning…' : 'No scan yet. Click Scan Now.'}
           </div>
         )}
-        {activeView !== 'dashboard' && (
+        {activeView === 'python' && scan && <PythonDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
+        {activeView === 'node' && scan && <NodeDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
+        {activeView === 'storage' && scan && <StorageDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
+        {activeView === 'path' && scan && <PathDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
+        {(activeView === 'history' || activeView === 'settings') && (
           <div>
-            <button onClick={() => setActiveView('dashboard')} className="mb-4 text-blue-400">← Back</button>
-            <p className="text-gray-400">Detail view for {activeView} — coming in Task 8</p>
+            <button onClick={() => setActiveView('dashboard')} className="mb-4 text-blue-400 hover:text-blue-300">← Back</button>
+            <p className="text-gray-400">{activeView === 'history' ? 'History' : 'Settings'} — coming in Task 9</p>
           </div>
         )}
       </div>
