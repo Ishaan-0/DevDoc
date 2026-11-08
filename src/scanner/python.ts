@@ -54,12 +54,13 @@ export function isNestedVenv(venvPath: string, allVenvPaths: string[]): boolean 
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'Library'])
+const SKIP_DIR_NAMES = new Set(['node_modules', '.git'])
 const MAX_DEPTH = 5
 const TIMEOUT_MS = 10_000
 
-function shouldSkipDir(name: string): boolean {
-  if (SKIP_DIRS.has(name)) return true
+function shouldSkipDir(name: string, fullPath: string): boolean {
+  if (SKIP_DIR_NAMES.has(name)) return true
+  if (fullPath.startsWith('/Library')) return true
   if (name.startsWith('.') && name !== '.venv') return true
   return false
 }
@@ -101,7 +102,7 @@ function findPyvenvCfgs(rootDir: string): string[] {
       if (entry.isFile() && entry.name === 'pyvenv.cfg') {
         results.push(fullPath)
       } else if (entry.isDirectory()) {
-        if (shouldSkipDir(entry.name)) continue
+        if (shouldSkipDir(entry.name, fullPath)) continue
         walk(fullPath, depth + 1)
       }
     }
@@ -150,10 +151,12 @@ async function discoverBinaries(): Promise<PythonBinary[]> {
   const binaries: PythonBinary[] = []
   const seen = new Set<string>()
 
-  // Get all python3 and python paths
-  const { stdout: whichOut } = await execFileP('which', ['-a', 'python3', 'python'])
-  const paths = whichOut
-    .split('\n')
+  // Get all python3 and python paths (BSD which on macOS accepts only one name at a time)
+  const [{ stdout: which3Out }, { stdout: which2Out }] = await Promise.all([
+    execFileP('which', ['-a', 'python3']),
+    execFileP('which', ['-a', 'python']),
+  ])
+  const paths = [...which3Out.split('\n'), ...which2Out.split('\n')]
     .map(l => l.trim())
     .filter(Boolean)
 
@@ -161,8 +164,8 @@ async function discoverBinaries(): Promise<PythonBinary[]> {
     if (seen.has(binPath)) continue
     seen.add(binPath)
 
-    const { stdout: versionOut } = await execFileP(binPath, ['--version'])
-    const versionMatch = versionOut.match(/Python\s+([\d.]+)/)
+    const { stdout: versionOut, stderr: versionErr } = await execFileP(binPath, ['--version'])
+    const versionMatch = (versionOut || versionErr).match(/Python\s+([\d.]+)/)
     const version = versionMatch ? versionMatch[1] : 'unknown'
 
     binaries.push({
@@ -218,7 +221,7 @@ export async function scanPython(roots: string[]): Promise<PythonScanResult> {
       issues.push({
         severity: 'error',
         message: `Broken venv at ${venvPath}: interpreter home '${home}' no longer exists`,
-        fixCommand: `rm -rf ${venvPath}`,
+        fixCommand: `rm -rf "${venvPath}"`,
       })
     }
 
