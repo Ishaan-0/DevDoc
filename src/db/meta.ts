@@ -7,7 +7,8 @@ export function getScanRoots(): string[] {
     "SELECT value FROM meta WHERE key = 'scanRoots'"
   ).get()
   if (!row) return [os.homedir()]
-  return JSON.parse(row.value) as string[]
+  const roots = JSON.parse(row.value) as string[]
+  return roots.length > 0 ? roots : [os.homedir()]
 }
 
 export function setScanRoots(roots: string[]): void {

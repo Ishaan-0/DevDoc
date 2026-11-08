@@ -212,7 +212,9 @@ export async function scanPython(roots: string[]): Promise<PythonScanResult> {
 
     const { home, version } = parsePyvenvCfg(cfgContent)
     const isBroken = !fs.existsSync(home)
-    const isNested = isNestedVenv(venvPath, venvPaths)
+    // Spec: check if home (interpreter dir) is inside another venv (borrowed interpreter),
+    // and also catch physically nested venvs
+    const isNested = isNestedVenv(venvPath, venvPaths) || isNestedVenv(home, venvPaths)
     const isOrphaned = checkOrphaned(venvPath)
     const lastModified = getLastModified(venvPath)
     const sizeBytes = await getVenvSize(venvPath)
