@@ -8,38 +8,32 @@ interface StorageDetailProps {
 }
 
 function formatBytes(n: number): string {
-  if (n >= 1024 * 1024) {
-    return `${(n / 1024 / 1024).toFixed(1)} MB`
-  }
+  if (n >= 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`
   return `${(n / 1024).toFixed(0)} KB`
 }
 
-export function StorageDetail({ scan, onBack }: StorageDetailProps) {
+export function StorageDetail({ scan }: StorageDetailProps) {
   const { brokenVenvs, nestedVenvs, orphanedVenvs, unusedGlobalPackages, largestItems } = scan.storage
   const top20 = largestItems.slice(0, 20)
+  const hasAnything = brokenVenvs.length + nestedVenvs.length + orphanedVenvs.length + unusedGlobalPackages.length + top20.length > 0
 
   return (
-    <div className="space-y-8">
-      <button
-        onClick={onBack}
-        className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
-      >
-        ← Back
-      </button>
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 32px', letterSpacing: '-0.02em' }}>Storage</h2>
+
+      {!hasAnything && <p style={emptyText}>Nothing to review.</p>}
 
       {brokenVenvs.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-3">Broken Virtual Environments</h2>
-          <div className="space-y-2">
+        <section style={{ marginBottom: 32 }}>
+          <div style={sectionHeader}>Broken Virtual Environments</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {brokenVenvs.map((v, i) => (
-              <div key={i} className="bg-gray-900 rounded p-3 flex items-center justify-between gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-mono text-xs text-gray-300 break-all">{v.path}</span>
-                  <span className="text-xs text-gray-400">{formatBytes(v.sizeBytes)}</span>
+              <div key={i} style={rowItem} className="selectable">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'SF Mono, Fira Code, monospace', fontSize: 11, color: '#9999a8', wordBreak: 'break-all', marginBottom: 2 }}>{v.path}</div>
+                  <div style={{ fontSize: 11, color: '#555' }}>{formatBytes(v.sizeBytes)}</div>
                 </div>
-                <div className="flex-shrink-0">
-                  <CopyButton command={`rm -rf "${v.path}"`} />
-                </div>
+                <CopyButton command={`rm -rf "${v.path}"`} />
               </div>
             ))}
           </div>
@@ -47,14 +41,14 @@ export function StorageDetail({ scan, onBack }: StorageDetailProps) {
       )}
 
       {nestedVenvs.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-3">Nested Virtual Environments</h2>
-          <div className="space-y-2">
+        <section style={{ marginBottom: 32 }}>
+          <div style={sectionHeader}>Nested Virtual Environments</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {nestedVenvs.map((v, i) => (
-              <div key={i} className="bg-gray-900 rounded p-3 flex items-center justify-between gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-mono text-xs text-gray-300 break-all">{v.path}</span>
-                  <span className="text-xs text-gray-400">{formatBytes(v.sizeBytes)}</span>
+              <div key={i} style={rowItem} className="selectable">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'SF Mono, Fira Code, monospace', fontSize: 11, color: '#9999a8', wordBreak: 'break-all', marginBottom: 2 }}>{v.path}</div>
+                  <div style={{ fontSize: 11, color: '#555' }}>{formatBytes(v.sizeBytes)}</div>
                 </div>
               </div>
             ))}
@@ -63,18 +57,16 @@ export function StorageDetail({ scan, onBack }: StorageDetailProps) {
       )}
 
       {orphanedVenvs.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-3">Orphaned Virtual Environments</h2>
-          <div className="space-y-2">
+        <section style={{ marginBottom: 32 }}>
+          <div style={sectionHeader}>Orphaned Virtual Environments</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {orphanedVenvs.map((v, i) => (
-              <div key={i} className="bg-gray-900 rounded p-3 flex items-center justify-between gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-mono text-xs text-gray-300 break-all">{v.path}</span>
-                  <span className="text-xs text-gray-400">{formatBytes(v.sizeBytes)}</span>
+              <div key={i} style={rowItem} className="selectable">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'SF Mono, Fira Code, monospace', fontSize: 11, color: '#9999a8', wordBreak: 'break-all', marginBottom: 2 }}>{v.path}</div>
+                  <div style={{ fontSize: 11, color: '#555' }}>{formatBytes(v.sizeBytes)}</div>
                 </div>
-                <div className="flex-shrink-0">
-                  <CopyButton command={`rm -rf "${v.path}"`} />
-                </div>
+                <CopyButton command={`rm -rf "${v.path}"`} />
               </div>
             ))}
           </div>
@@ -82,19 +74,17 @@ export function StorageDetail({ scan, onBack }: StorageDetailProps) {
       )}
 
       {unusedGlobalPackages.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-3">Unused Global Packages</h2>
-          <div className="space-y-2">
+        <section style={{ marginBottom: 32 }}>
+          <div style={sectionHeader}>Unused Global Packages</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {unusedGlobalPackages.map((pkg, i) => (
-              <div key={i} className="bg-gray-900 rounded p-3 flex items-center justify-between gap-3">
-                <div className="flex gap-3 items-center">
-                  <span className="text-sm text-gray-200">{pkg.name}</span>
-                  <span className="text-xs text-gray-400">{pkg.version}</span>
-                  <span className="text-xs text-gray-400">{formatBytes(pkg.sizeBytes)}</span>
+              <div key={i} style={rowItem} className="selectable">
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 13, color: '#ccc' }}>{pkg.name}</span>
+                  <span style={{ fontSize: 11, color: '#555' }}>{pkg.version}</span>
+                  <span style={{ fontSize: 11, color: '#555' }}>{formatBytes(pkg.sizeBytes)}</span>
                 </div>
-                <div className="flex-shrink-0">
-                  <CopyButton command={`npm uninstall -g ${pkg.name}`} />
-                </div>
+                <CopyButton command={`npm uninstall -g ${pkg.name}`} />
               </div>
             ))}
           </div>
@@ -103,26 +93,25 @@ export function StorageDetail({ scan, onBack }: StorageDetailProps) {
 
       {top20.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold mb-3">Largest Items</h2>
-          <div className="space-y-1">
+          <div style={sectionHeader}>Largest Items</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {top20.map((item, i) => (
-              <div key={i} className="bg-gray-900 rounded p-3 flex items-center gap-3">
-                <span className="text-xs text-gray-500 w-5 text-right">{i + 1}</span>
-                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                  <span className="text-sm text-gray-200">{item.label}</span>
-                  <span className="font-mono text-xs text-gray-400 truncate">{item.path}</span>
+              <div key={i} style={{ ...rowItem, alignItems: 'center' }} className="selectable">
+                <span style={{ fontSize: 11, color: '#333', width: 20, textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, color: '#ccc', marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontFamily: 'SF Mono, Fira Code, monospace', fontSize: 10, color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.path}</div>
                 </div>
-                <span className="text-xs text-gray-300 flex-shrink-0">{formatBytes(item.sizeBytes)}</span>
+                <span style={{ fontSize: 11, color: '#555', flexShrink: 0 }}>{formatBytes(item.sizeBytes)}</span>
               </div>
             ))}
           </div>
         </section>
       )}
-
-      {brokenVenvs.length === 0 && nestedVenvs.length === 0 && orphanedVenvs.length === 0 &&
-       unusedGlobalPackages.length === 0 && top20.length === 0 && (
-        <p className="text-gray-400">No storage issues found.</p>
-      )}
     </div>
   )
 }
+
+const sectionHeader: React.CSSProperties = { fontSize: 11, color: '#3a3a3f', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 14 }
+const emptyText: React.CSSProperties = { fontSize: 14, color: '#3a3a3f', margin: 0 }
+const rowItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, background: '#0e0e11', border: '1px solid #1c1c20', borderRadius: 10, padding: '14px 18px' }

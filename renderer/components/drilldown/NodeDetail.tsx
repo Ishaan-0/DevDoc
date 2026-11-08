@@ -8,102 +8,91 @@ interface NodeDetailProps {
 }
 
 function formatBytes(n: number): string {
-  if (n >= 1024 * 1024) {
-    return `${(n / 1024 / 1024).toFixed(1)} MB`
-  }
+  if (n >= 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`
   return `${(n / 1024).toFixed(0)} KB`
 }
 
-export function NodeDetail({ scan, onBack }: NodeDetailProps) {
+export function NodeDetail({ scan }: NodeDetailProps) {
   const { binary, globalPackages, issues } = scan.node
 
   return (
-    <div className="space-y-8">
-      <button
-        onClick={onBack}
-        className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
-      >
-        ← Back
-      </button>
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 32px', letterSpacing: '-0.02em' }}>Node</h2>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Node Binary</h2>
+      <section style={{ marginBottom: 40 }}>
+        <div style={sectionHeader}>Binary</div>
         {binary === null ? (
-          <p className="text-gray-400">Node not found on this system.</p>
+          <p style={emptyText}>Node not found on this system.</p>
         ) : (
-          <div className="bg-gray-900 rounded p-3 flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="font-mono text-xs text-gray-300">{binary.path}</span>
-              <span className="text-sm text-gray-200">{binary.version}</span>
+          <div style={rowItem} className="selectable">
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'SF Mono, Fira Code, monospace', fontSize: 11, color: '#9999a8', marginBottom: 4 }}>{binary.path}</div>
+              <div style={{ fontSize: 13, color: '#ccc' }}>{binary.version}</div>
             </div>
-            <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300">
-              {binary.manager}
-            </span>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#1e1e22', color: '#888' }}>{binary.manager}</span>
           </div>
         )}
       </section>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Global Packages</h2>
+      <section style={{ marginBottom: 40 }}>
+        <div style={sectionHeader}>Global Packages</div>
         {globalPackages.length === 0 ? (
-          <p className="text-gray-400">No global packages found.</p>
+          <p style={emptyText}>No global packages found.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-400 border-b border-gray-700">
-                <th className="pb-2 pr-4">Name</th>
-                <th className="pb-2 pr-4">Version</th>
-                <th className="pb-2 pr-4">Size</th>
-                <th className="pb-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {globalPackages.map((pkg, i) => (
-                <tr key={i} className="border-b border-gray-800">
-                  <td className="py-2 pr-4 text-gray-200">
-                    {pkg.name}
-                    {pkg.isUnused && (
-                      <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-900 text-amber-300">
-                        unused
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2 pr-4 text-gray-400">{pkg.version}</td>
-                  <td className="py-2 pr-4 text-gray-400">{formatBytes(pkg.sizeBytes)}</td>
-                  <td className="py-2">
-                    {pkg.isUnused && (
-                      <CopyButton command={`npm uninstall -g ${pkg.name}`} />
-                    )}
-                  </td>
+          <div style={tableWrap} className="selectable">
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={th}>Name</th>
+                  <th style={th}>Version</th>
+                  <th style={th}>Size</th>
+                  <th style={th}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {globalPackages.map((pkg, i) => (
+                  <tr key={i}>
+                    <td style={td}>
+                      <span style={{ color: '#ccc' }}>{pkg.name}</span>
+                      {pkg.isUnused && (
+                        <span style={{ marginLeft: 6, fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#2a2010', color: '#fbbf24' }}>unused</span>
+                      )}
+                    </td>
+                    <td style={{ ...td, color: '#555' }}>{pkg.version}</td>
+                    <td style={{ ...td, color: '#555' }}>{formatBytes(pkg.sizeBytes)}</td>
+                    <td style={td}>
+                      {pkg.isUnused && <CopyButton command={`npm uninstall -g ${pkg.name}`} />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Issues</h2>
-        {issues.length === 0 ? (
-          <p className="text-gray-400">No issues found.</p>
-        ) : (
-          <div className="space-y-2">
+      {issues.length > 0 && (
+        <section>
+          <div style={sectionHeader}>Issues</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {issues.map((issue, i) => (
-              <div key={i} className="bg-gray-900 rounded p-3 flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2">
-                  <span>{issue.severity === 'error' ? '🔴' : '⚠️'}</span>
-                  <span className="text-sm text-gray-200">{issue.message}</span>
-                </div>
-                {issue.fixCommand && (
-                  <div className="flex-shrink-0">
-                    <CopyButton command={issue.fixCommand} />
-                  </div>
-                )}
+              <div key={i} style={{ ...rowItem, alignItems: 'flex-start' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: issue.severity === 'error' ? '#f87171' : '#fbbf24', flexShrink: 0, marginTop: 5 }} />
+                <span style={{ fontSize: 13, color: '#ccc', flex: 1 }} className="selectable">{issue.message}</span>
+                {issue.fixCommand && <CopyButton command={issue.fixCommand} />}
               </div>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   )
 }
+
+const sectionHeader: React.CSSProperties = { fontSize: 11, color: '#3a3a3f', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 14 }
+const emptyText: React.CSSProperties = { fontSize: 14, color: '#3a3a3f', margin: 0 }
+const tableWrap: React.CSSProperties = { width: '100%', overflowX: 'auto' }
+const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 13 }
+const th: React.CSSProperties = { textAlign: 'left', padding: '0 16px 10px 0', fontSize: 11, color: '#3a3a3f', fontWeight: 500, borderBottom: '1px solid #1a1a1d', whiteSpace: 'nowrap' }
+const td: React.CSSProperties = { padding: '13px 16px 13px 0', fontSize: 13, color: '#888', borderBottom: '1px solid #111' }
+const rowItem: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, background: '#0e0e11', border: '1px solid #1c1c20', borderRadius: 10, padding: '14px 18px' }

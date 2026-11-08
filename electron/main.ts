@@ -4,8 +4,10 @@ import { registerIpcHandlers } from '../src/ipc/handlers'
 
 function createWindow(): void {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1100,
+    height: 720,
+    minWidth: 820,
+    minHeight: 540,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {

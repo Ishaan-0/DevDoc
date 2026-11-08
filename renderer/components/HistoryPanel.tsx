@@ -7,90 +7,81 @@ export function HistoryPanel({ onBack }: { onBack: () => void }) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   if (isLoading) {
-    return (
-      <div className="p-4 text-gray-400">Loading…</div>
-    )
+    return <div style={{ color: '#444', fontSize: 13 }}>Loading…</div>
   }
 
   if (history.length === 0) {
-    return (
-      <div className="p-4">
-        <button onClick={onBack} className="mb-4 text-blue-400 hover:text-blue-300">← Back</button>
-        <p className="text-gray-400">No history yet.</p>
-      </div>
-    )
+    return <p style={{ color: '#444', fontSize: 13 }}>No scan history yet.</p>
   }
 
-  // Sort newest first
   const sorted = [...history].sort((a, b) => b.timestamp - a.timestamp)
 
   return (
-    <div className="p-4">
-      <button onClick={onBack} className="mb-4 text-blue-400 hover:text-blue-300">← Back</button>
-      <h2 className="text-xl font-semibold mb-4 text-white">Scan History</h2>
-      <ul className="space-y-2">
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 28px', letterSpacing: '-0.02em' }}>History</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {sorted.map((entry, index) => {
-          // Find the previous scan (older) for diff
           const prevEntry = sorted[index + 1]
-          let summaryLine: string
-          if (!prevEntry) {
-            summaryLine = 'First scan'
-          } else {
-            const diff = diffScans(prevEntry.result, entry.result)
-            const parts = diff.summary
-            summaryLine = parts.length > 0 ? parts.join(', ') : 'No changes'
-          }
-
+          const diff = prevEntry ? diffScans(prevEntry.result, entry.result) : null
+          const summaryLine = !prevEntry
+            ? 'First scan'
+            : diff && diff.summary.length > 0
+              ? diff.summary.join(', ')
+              : 'No changes'
           const isExpanded = expandedId === entry.id
 
-          // Compute diff for expanded view
-          const diff = prevEntry ? diffScans(prevEntry.result, entry.result) : null
-
           return (
-            <li key={entry.id} className="bg-gray-900 rounded">
+            <div key={entry.id} style={{ background: '#111113', border: '1px solid #1a1a1d', borderRadius: 7, overflow: 'hidden' }}>
               <button
-                className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-800 rounded"
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '11px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
                 onClick={() => setExpandedId(isExpanded ? null : entry.id)}
               >
-                <span className="text-sm text-gray-200">
-                  {new Date(entry.timestamp).toLocaleString()}
-                </span>
-                <span className="text-xs text-gray-400 ml-4">{summaryLine}</span>
+                <span style={{ fontSize: 12, color: '#ccc' }}>{new Date(entry.timestamp).toLocaleString()}</span>
+                <span style={{ fontSize: 11, color: '#444' }}>{summaryLine}</span>
               </button>
-              {isExpanded && diff && (
-                <div className="px-4 pb-3 text-xs text-gray-300 space-y-1 border-t border-gray-800 pt-2">
-                  {diff.pythonVersionsAdded.length > 0 && (
-                    <p>Python added: {diff.pythonVersionsAdded.join(', ')}</p>
-                  )}
-                  {diff.pythonVersionsRemoved.length > 0 && (
-                    <p>Python removed: {diff.pythonVersionsRemoved.join(', ')}</p>
-                  )}
-                  {diff.venvsAdded.length > 0 && (
-                    <p>Venvs added: {diff.venvsAdded.join(', ')}</p>
-                  )}
-                  {diff.venvsRemoved.length > 0 && (
-                    <p>Venvs removed: {diff.venvsRemoved.join(', ')}</p>
-                  )}
-                  {diff.nodeVersionChanged && (
-                    <p>Node version changed: {diff.nodeVersionChanged.from} → {diff.nodeVersionChanged.to}</p>
-                  )}
-                  {diff.globalPackagesAdded.length > 0 && (
-                    <p>Global packages added: {diff.globalPackagesAdded.join(', ')}</p>
-                  )}
-                  {diff.globalPackagesRemoved.length > 0 && (
-                    <p>Global packages removed: {diff.globalPackagesRemoved.join(', ')}</p>
+              {isExpanded && (
+                <div style={{ padding: '0 14px 12px', borderTop: '1px solid #1a1a1d', paddingTop: 10 }}>
+                  {!diff ? (
+                    <p style={{ fontSize: 11, color: '#444', margin: 0 }}>First scan — no previous data to compare.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {diff.pythonVersionsAdded.map((v, i) => <DiffLine key={i} text={`Python ${v} added`} type="add" />)}
+                      {diff.pythonVersionsRemoved.map((v, i) => <DiffLine key={i} text={`Python ${v} removed`} type="remove" />)}
+                      {diff.venvsAdded.map((v, i) => <DiffLine key={i} text={`Venv added: ${v}`} type="add" />)}
+                      {diff.venvsRemoved.map((v, i) => <DiffLine key={i} text={`Venv removed: ${v}`} type="remove" />)}
+                      {diff.nodeVersionChanged && <DiffLine text={`Node: ${diff.nodeVersionChanged}`} type="change" />}
+                      {diff.globalPackagesAdded.map((n, i) => <DiffLine key={i} text={`${n} installed globally`} type="add" />)}
+                      {diff.globalPackagesRemoved.map((n, i) => <DiffLine key={i} text={`${n} removed globally`} type="remove" />)}
+                      {diff.summary.length === 0 && <p style={{ fontSize: 11, color: '#444', margin: 0 }}>No changes detected.</p>}
+                    </div>
                   )}
                 </div>
               )}
-              {isExpanded && !diff && (
-                <div className="px-4 pb-3 text-xs text-gray-400 border-t border-gray-800 pt-2">
-                  First scan — no previous data to compare.
-                </div>
-              )}
-            </li>
+            </div>
           )
         })}
-      </ul>
+      </div>
+    </div>
+  )
+}
+
+function DiffLine({ text, type }: { text: string; type: 'add' | 'remove' | 'change' }) {
+  const color = type === 'add' ? '#34d399' : type === 'remove' ? '#f87171' : '#fbbf24'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontSize: 11, color, flexShrink: 0 }}>{type === 'add' ? '+' : type === 'remove' ? '−' : '~'}</span>
+      <span style={{ fontSize: 11, color: '#888' }} className="selectable">{text}</span>
     </div>
   )
 }

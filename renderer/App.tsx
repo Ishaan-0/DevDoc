@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { Dashboard } from './components/Dashboard'
 import { ScanButton } from './components/ScanButton'
 import { useScan } from './hooks/useScan'
-import type { ScanResult } from '../src/types'
 import { PythonDetail } from './components/drilldown/PythonDetail'
 import { NodeDetail } from './components/drilldown/NodeDetail'
 import { StorageDetail } from './components/drilldown/StorageDetail'
@@ -32,32 +31,86 @@ export default function App(): React.JSX.Element {
     })
   }, [])
 
-  const handleDismissBanner = () => {
-    setBannerDismissed(true)
-  }
+  const navItems: { id: ActiveView; label: string }[] = [
+    { id: 'dashboard', label: 'Overview' },
+    { id: 'history', label: 'History' },
+    { id: 'settings', label: 'Settings' },
+  ]
+
+  const isDetailView = ['python', 'node', 'storage', 'path'].includes(activeView)
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">DevDoc</h1>
-            <button onClick={() => setActiveView('history')} className="text-sm text-gray-400 hover:text-gray-200">History</button>
-            <button onClick={() => setActiveView('settings')} className="text-sm text-gray-400 hover:text-gray-200">Settings</button>
-          </div>
-          <ScanButton isScanning={isScanning} lastScanTime={scan?.timestamp ?? null} onScan={triggerScan} />
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#000', overflow: 'hidden' }}>
+      {/* Top bar */}
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        height: 44,
+        borderBottom: '1px solid #1a1a1d',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-0.01em' }}>DevDoc</span>
+          {!isDetailView && (
+            <nav style={{ display: 'flex', gap: 2 }}>
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveView(item.id)}
+                  style={{
+                    fontSize: 12,
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: activeView === item.id ? '#222' : 'transparent',
+                    color: activeView === item.id ? '#fff' : '#666',
+                    transition: 'color 0.1s, background 0.1s',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          )}
+          {isDetailView && (
+            <button
+              onClick={() => setActiveView('dashboard')}
+              style={{
+                fontSize: 12,
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: 'none',
+                cursor: 'pointer',
+                background: 'transparent',
+                color: '#666',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              ← Overview
+            </button>
+          )}
         </div>
+        <ScanButton isScanning={isScanning} lastScanTime={scan?.timestamp ?? null} onScan={triggerScan} />
+      </header>
+
+      {/* Content */}
+      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column' }}>
         {activeView === 'dashboard' && scan && (
           <Dashboard
             scan={scan}
             isFirstLaunch={isFirstLaunch && !bannerDismissed}
             onCardClick={setActiveView}
-            onDismissBanner={handleDismissBanner}
+            onDismissBanner={() => setBannerDismissed(true)}
           />
         )}
         {activeView === 'dashboard' && !scan && (
-          <div className="text-gray-400 text-center py-20">
-            {isScanning ? 'Scanning…' : 'No scan yet. Click Scan Now.'}
+          <div style={{ flex: 1, color: '#555', textAlign: 'center', paddingTop: 80, fontSize: 14 }}>
+            {isScanning ? 'Scanning your environment…' : 'Run a scan to get started.'}
           </div>
         )}
         {activeView === 'python' && scan && <PythonDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
@@ -66,7 +119,7 @@ export default function App(): React.JSX.Element {
         {activeView === 'path' && scan && <PathDetail scan={scan} onBack={() => setActiveView('dashboard')} />}
         {activeView === 'history' && <HistoryPanel onBack={() => setActiveView('dashboard')} />}
         {activeView === 'settings' && <Settings onBack={() => setActiveView('dashboard')} />}
-      </div>
+      </main>
     </div>
   )
 }

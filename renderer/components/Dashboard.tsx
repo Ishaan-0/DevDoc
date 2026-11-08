@@ -15,11 +15,18 @@ interface DashboardProps {
 
 export function Dashboard({ scan, isFirstLaunch, onCardClick, onDismissBanner }: DashboardProps) {
   return (
-    <div>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {isFirstLaunch && (
         <FirstLaunchBanner onDismiss={onDismissBanner ?? (() => {})} />
       )}
-      <div className="grid grid-cols-2 gap-4">
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        gap: 12,
+      }}>
         <PythonCard scan={scan} onClick={() => onCardClick('python')} />
         <NodeCard scan={scan} onClick={() => onCardClick('node')} />
         <StorageCard scan={scan} onClick={() => onCardClick('storage')} />
