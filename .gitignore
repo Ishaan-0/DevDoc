@@ -1,0 +1,6 @@
+docs/
+__pycache__/*
+*.md
+.claude/
+.DS_Store/
+*.png
