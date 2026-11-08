@@ -63,6 +63,10 @@ describe('detectNodeManager', () => {
     expect(detectNodeManager('/usr/bin/node')).toBe('system')
   })
 
+  test('identifies system from Homebrew on Apple Silicon', () => {
+    expect(detectNodeManager('/opt/homebrew/bin/node')).toBe('system')
+  })
+
   test('returns unknown for unrecognized path', () => {
     expect(detectNodeManager('/opt/custom/node')).toBe('unknown')
   })
@@ -187,6 +191,26 @@ describe('scanNode', () => {
     const result = await scanNode(['/tmp/fakeroots'])
     const unused = result.globalPackages.find(p => p.name === 'some-obscure-tool')
     expect(unused?.isUnused).toBe(true)
+  })
+
+  test('warns when nvm detected but no .nvmrc in scan roots', async () => {
+    mockReaddirSync.mockReturnValue([] as unknown as ReturnType<typeof fs.readdirSync>)
+    mockExistsSync.mockReturnValue(false) // no .nvmrc or .node-version
+
+    mockExecFile.mockImplementation(
+      (cmd: string, args: string[], _opts: unknown, cb: (err: Error | null, out?: { stdout: string; stderr: string }) => void) => {
+        if (cmd === 'which') cb(null, { stdout: '/Users/test/.nvm/versions/node/v20.0.0/bin/node\n', stderr: '' })
+        else if (cmd === 'node') cb(null, { stdout: 'v20.0.0\n', stderr: '' })
+        else if (cmd === 'npm' && args.includes('list')) cb(null, { stdout: JSON.stringify({ dependencies: {} }), stderr: '' })
+        else if (cmd === 'npm' && args.includes('root')) cb(null, { stdout: '/usr/local/lib/node_modules\n', stderr: '' })
+        else cb(null, { stdout: '', stderr: '' })
+      }
+    )
+
+    const result = await scanNode(['/tmp/fakeroots'])
+    const nvmrcIssue = result.issues.find(i => i.message.includes('.nvmrc') || i.message.includes('not pinned'))
+    expect(nvmrcIssue).toBeDefined()
+    expect(nvmrcIssue?.severity).toBe('warning')
   })
 
   test('returns null binary when node is not found', async () => {

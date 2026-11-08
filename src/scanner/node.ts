@@ -20,6 +20,8 @@ export function detectNodeManager(nodePath: string): NodeBinary['manager'] {
   if (nodePath.includes('.volta/tools')) return 'volta'
   if (nodePath.includes('.fnm/node-versions') || nodePath.includes('.fnm/aliases')) return 'fnm'
   if (nodePath.includes('/usr/local/bin') || nodePath.includes('/usr/bin')) return 'system'
+  // Homebrew on Apple Silicon installs to /opt/homebrew
+  if (nodePath.includes('/opt/homebrew')) return 'system'
   return 'unknown'
 }
 
@@ -133,6 +135,7 @@ function execFileP(cmd: string, args: string[]): Promise<{ stdout: string; stder
       }
     )
     signal.addEventListener('abort', () => {
+      child.kill()
       resolve({ stdout: '', stderr: 'timeout' })
     })
     void child
@@ -208,7 +211,24 @@ export async function scanNode(roots: string[]): Promise<NodeScanResult> {
     isUnused: !depSet.has(pkg.name),
   }))
 
-  // 5. Issues: TypeScript installed globally (warning)
+  // 5. Issues: version manager present but no lockfile found
+  const managedManagers: NodeBinary['manager'][] = ['nvm', 'volta', 'fnm']
+  if (managedManagers.includes(binary.manager)) {
+    const lockfiles = ['.nvmrc', '.node-version']
+    const hasLockfile = roots.some((root) =>
+      lockfiles.some((f) => fs.existsSync(path.join(root, f)))
+    )
+    if (!hasLockfile) {
+      const managerName = binary.manager
+      issues.push({
+        severity: 'warning',
+        message: `${managerName} detected but no .nvmrc or .node-version found in scan roots — Node version is not pinned`,
+        fixCommand: `echo "${binary.version}" > .nvmrc`,
+      })
+    }
+  }
+
+  // 6. Issues: TypeScript installed globally (warning)
   const hasGlobalTypeScript = globalPackages.some((p) => p.name === 'typescript')
   if (hasGlobalTypeScript) {
     issues.push({
